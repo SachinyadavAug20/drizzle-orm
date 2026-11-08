@@ -220,12 +220,13 @@ export abstract class SQLiteDialect {
 						);
 					}
 				} else {
-					if (isSingleTable) {
-						chunk.push(sql.identifier(this.casing.getColumnCasing(field)));
+					const colSql = isSingleTable
+						? sql.identifier(this.casing.getColumnCasing(field))
+						: sql`${sql.identifier(tableName)}.${sql.identifier(this.casing.getColumnCasing(field))}`;
+					if ('getSQLSelect' in field && typeof (field as any).getSQLSelect === 'function') {
+						chunk.push(sql`${(field as any).getSQLSelect(colSql)} as ${sql.identifier(this.casing.getColumnCasing(field))}`);
 					} else {
-						chunk.push(
-							sql`${sql.identifier(tableName)}.${sql.identifier(this.casing.getColumnCasing(field))}`,
-						);
+						chunk.push(colSql);
 					}
 				}
 			} else if (is(field, Subquery)) {

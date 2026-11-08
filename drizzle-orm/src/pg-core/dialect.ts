@@ -242,10 +242,11 @@ export class PgDialect {
 						chunk.push(sql` as ${sql.identifier(field.fieldAlias)}`);
 					}
 				} else if (is(field, Column)) {
-					if (isSingleTable) {
-						chunk.push(sql.identifier(this.casing.getColumnCasing(field)));
+					const colSql = isSingleTable ? sql.identifier(this.casing.getColumnCasing(field)) : field;
+					if ('getSQLSelect' in field && typeof (field as any).getSQLSelect === 'function') {
+						chunk.push(sql`${(field as any).getSQLSelect(colSql)} as ${sql.identifier(this.casing.getColumnCasing(field))}`);
 					} else {
-						chunk.push(field);
+						chunk.push(colSql);
 					}
 				} else if (is(field, Subquery)) {
 					const entries = Object.entries(field._.selectedFields) as [string, SQL.Aliased | Column | SQL][];
